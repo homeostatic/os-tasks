@@ -1,7 +1,5 @@
 #ifndef LINKED_LIST
 #define LINKED_LIST
-#include <stdio.h>
-#include <stdlib.h>
 
 // The data that is stored within a node of the doubly-linked list
 struct Data {
@@ -14,27 +12,19 @@ struct Node {
     struct Data data;
     struct Node* next;
     struct Node* prev;
-    // TODO: Complete me
 };
 
 // Define the structure of the doubly-linked list
 struct DoublyLinkedList {
-    // TODO: Define me
+    struct Node* first;
+    struct Node* last;
+    //int length;
 };
 
 // Function to create a new node
 // Return a pointer to the node
 // Exit if allocation fails.
-struct Node* createNode(struct Data data){
-    struct Node node;
-    node.data = data;
-    Node* nullpointer = NULL;
-    node.next = NULL;
-    node.prev = NULL;
-
-        /* data */
-    return &node; 
-};
+struct Node* createNode(struct Data data);
 
 // Function to initialize a doubly-linked list with NULL
 void initializeDoublyList(struct DoublyLinkedList* list);
