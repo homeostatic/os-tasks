@@ -14,7 +14,7 @@ struct Node* createNode(struct Data data){
     //struct Node* p =  &cData;
     cData->data = data;
     return cData;
-}
+    }
 
 
 void initializeDoublyList(struct DoublyLinkedList* list){
@@ -28,7 +28,7 @@ void initializeDoublyList(struct DoublyLinkedList* list){
     list->last = NULL;
         
     //list->length = 0; 
-};
+    }
 
 void freeDoublyList(struct DoublyLinkedList* list){
     // for all nodes in list run free()
@@ -38,8 +38,8 @@ void freeDoublyList(struct DoublyLinkedList* list){
         struct Node* next = node->next; //read node.next
         free(node); //free node
         node = next; // set node to next
-    }
-    //list->length = 0; 
+        }
+        //list->length = 0; 
     }
 
 void printListForward(const struct DoublyLinkedList* list){
@@ -50,9 +50,8 @@ void printListForward(const struct DoublyLinkedList* list){
         int length = data.length;
         printf("ID: %d, Length: %d \n", id, length);
         node = node->next;
+        }
     }
-    
-};
 
 void printListReverse(const struct DoublyLinkedList* list){
     struct Node* node = list->last;
@@ -62,9 +61,9 @@ void printListReverse(const struct DoublyLinkedList* list){
         //int length = data.length;
         printf("ID: %d, Length: %d \n", node->data.id, node->data.length);
         node = node->prev;
-    }
+        }
     
-};
+    }
 
 
 // Function to insert a node at the end of the doubly-linked list
@@ -75,13 +74,13 @@ void append(struct DoublyLinkedList* list, struct Data data){
         //list is empty == first = last = newnode
         list->first = newnode;
         list->last = newnode;
-    }else{
+        }else{
         //list not empty 
-    list->last->next = newnode; //link forward
-    newnode->prev = list->last; // link backward
-    list->last = newnode;       //end of list update
+        list->last->next = newnode; //link forward
+        newnode->prev = list->last; // link backward
+        list->last = newnode;       //end of list update
+        }
     }
-};
 
 
 // Function to insert a node at the head of the doubly-linked list
@@ -91,13 +90,13 @@ void appendLeft(struct DoublyLinkedList* list, struct Data data){
         //list is empty == first = last = newnode
         list->first = newnode;
         list->last = newnode;
-    }else{
+        }else{
         //list not empty 
-    list->first->prev = newnode; //link forward
-    newnode->next = list->first; // link backward
-    list->first = newnode;       //end of list update
+        list->first->prev = newnode; //link forward
+        newnode->next = list->first; // link backward
+        list->first = newnode;       //end of list update
+        }
     }
-};
 
 // Pops the current head of the linked list
 // Stores the popped data in the variable pointed to by popped
@@ -105,33 +104,53 @@ void appendLeft(struct DoublyLinkedList* list, struct Data data){
 // you tried to pop from an empty list (do not exit)
 int pop(struct DoublyLinkedList* list, struct Data* popped){
 
+    // list with 1 element??
+
+    // free(oldhead)
+
     if(!(list->first)){
         //list is empty
         return 1;
-    }
+        }
+
+    if(list->first == list->last){
+        // list is 1 element long
+        *popped = list->first->data;
+        free(list->first);
+        list->first = NULL;
+        list->last = NULL;
+
+        return 0;
+        }
     *popped = list->first->data;
-    list->first = list->first->next;
+    // make a temporary copy of first->next pointer
+    struct Node* newhead = list->first;
+    free(list->first);
+    list->first = newhead;
+
     return 0;
-    //
-    };
+    }
 
 struct Data createData(int n){
     struct Data* data = malloc(sizeof(struct Data));
     if(!data){
         perror("malloc failed during data creation");
         exit(1);
-    }
+        }
     data->id = n;
     data->length = n*10;
     return *data;
-}
+    }
 
 
 int main(){
     // test pad for the LinkedList.h header written for assignment 1.5 of OS WS24/25 
 
+    //create and init a dll
     struct DoublyLinkedList* mylist; 
     initializeDoublyList(mylist);
+
+    //append and print various things
     append(mylist, createData(5));
     printListForward(mylist);
     printf("\n");
@@ -146,10 +165,14 @@ int main(){
     appendLeft(mylist, createData(7));
     printListForward(mylist);
     printf("\n");
-    struct Data pdata = {5, 10};
-    struct DoublyLinkedList* myotherlist;
-    initializeDoublyList(myotherlist);
-    int p = pop(myotherlist, &pdata);
+
+    //create struct for storing popped data
+    struct Data pdata;
+
+    int p = pop(mylist, &pdata);
+
+    //gdb 
+
     return 0;
 
 };
