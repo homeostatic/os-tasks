@@ -40,7 +40,7 @@ int read_file(char* path, char** read_string) {
             return 0;
         }
         *read_string = rBuff;
-        free(rBuff);
+        //free(rBuff);
         return read_bytes;
     }else{
         close(fileDesc);
@@ -81,21 +81,22 @@ int internal_wc(char* path, struct Res* result) {
     int* iWP = &isWord;
     // int i = 0; // Index variable (I know i could do this with a for-loop, but it didnt work for some reason)
     int words = 0; // Amount of words in file
-    int* wordsP = &words;
+    //int* wordsP = &words;
     int lines = 0; // Amount of lines in file
-    int* linesP = &lines;
-
+    //int* linesP = &lines;
+    
+    //debug
     //printf("%s, %ld\n",*resStrP, strlen(resStr));
     
     // Count the number of words and newlines
     for (int i = 0; i < strlen(resStr); i++){       
-        char curChar = *resStrP[i];
+        char curChar = resStr[i];
         if (isspace(curChar) != 0){ // If the current character is a whitespace...
             if (curChar == '\n'){ // ...add +1 to lines if '\n'..
-                *linesP++; 
+                lines++; 
             }            
             if (isWord == 1){ //...and if we're currently reading a word..
-                wordsP++; //...add +1 to words
+                words++; //...add +1 to words
             }
             *iWP = 0; //...now we're not reading a word anymore!
         } else {
