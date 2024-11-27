@@ -1,0 +1,88 @@
+Process     - Programm in execution
+    # Address space
+    # Instruction {Programm}
+    # Thread {activitiy carrier}
+Programm    - 
+
+OS -  creates and manages Processes
+    # Scheduling - deciding on an order to run Processes
+        +parallelism
+            -multi core
+        +concurrency
+            -psuedo-parallelism
+            -faking it
+
+        Context switching:
+            changing the running Process
+                includes "context"
+                    -CPU registers
+                    -PC
+                    -Stack pointer
+                    -used data memory 
+
+    # Dispatching - the activity to start a Process
+
+Forking:
+-fork()
+    -clones current Process
+    Parent & child
+    if Parent ends first: child is orphan
+    if process is terminated but still in table -> zombie
+
+         _______________________child
+        |
+________|________________________parent
+
+int main() {
+        //default fork() behaiviour is concurrency of parent/child
+        switch (fork()) {
+        case -1:
+            perror("fork failed");
+            return 1;
+            break;
+        case 0:
+            //in child process
+            code;
+            code;
+            code;
+            break;
+        default:
+            //in parent process
+            code;
+            code;
+            code;
+        }
+        return 0;
+}
+
+// wait for a child to die before executing further
+    wait(NULL)
+    -parameter allows for reading out of child status (via pointer)
+
+
+
+
+###############################
++Threads
+ no distinct Address space
+    a thread belongs to a process
+    a process can have multiple Threads
+
+in C
+
+#include <pthread.h>
+
+pthread_t threads[numthreads];
+for (int i = 0, i<numthreads; i++){
+    pthread_create(&threads[i], pointer_to_attributes, function_for_thread, pointer_to_arguments)
+    }
+
+for (int i = 0;i<numthreads; i++){
+    pthread_join(threads[i],pointer_to_return)
+}
+
+%% pthread_exit(threads[i]);
+
+Compile with: 
+>>> gcc programm -o source.c -pthread
+
