@@ -20,14 +20,15 @@ typedef struct Thread_input{
 @return The start routine has to return a void pointer - just return NULL in this task :)
 */
 void* thread_routine(void* tip){
-  int res = 0;
-  int* resp = &res;
-  
-  for (int i = tip->lowerbound; i < (tip->upperbound)-1; i++){
-    *resp += tip->arr[i];
-  }
+  // cast arguments to an array we can use  
+  Thread_input* args = (Thread_input*) tip;  
 
-  tip->res += res;
+  
+  // work through the array and sum up the assigned range
+  for (int i = args->lower_bound; i < (args->upper_bound)-1; i++){
+    args->res += args->arr[i];
+  }
+  
   return NULL;
 }
 
@@ -60,60 +61,88 @@ long threaded_sum(int thread_num, long input_arr[], size_t array_len){
     // Compute interval for upper and lower bounds for the subarrays
     int interval = array_len/local_tnum;
     
-    long* iap = &input_arr;
+    //long* iap = &input_arr;
 
+    
     //Initialize thread_input struct
-    struct Thread_input* t_input = (struct Thread_input*)malloc(sizeof(struct Thread_input));
-    t_input->lower_bound = 0;
-    t_input->upper_bound = 0;
-    t_input->res = 0;
-    t_input->arr = iap;
+    //-> we need an array of these -> moved withing the thread creation loop
+
+    //struct Thread_input* t_input = (struct Thread_input*)malloc(sizeof(struct Thread_input));
+    //t_input->lower_bound = 0;
+    //t_input->upper_bound = 0;
+    //t_input->res = 0;
+    //t_input->arr = iap;
 
     // Create threads and start their routines
+    // an array of threads
     pthread_t threads[thread_num];
+
+    //an array of input structs 
+    struct Thread_input* t_input[thread_num];
+
+    
     for (int i = 0; i < local_tnum; i++){
+        t_input[i] = (struct Thread_input*)malloc(sizeof(struct Thread_input));
         // Determine bounds of array
-        t_input->lower_bound = i*interval;
-        t_input->upper_bound = (i+1)*interval;     
+        t_input[i]->lower_bound = i*interval;
+        if (i==local_tnum-1){ 
+            t_input[i]->upper_bound = array_len+1;
+        }else{
+        t_input[i]->upper_bound = (i+1)*interval+1;
+        }
+        // init result value
+        t_input[i]->res = 0;
+        // pointer to array of values to sum up
+        t_input[i]->arr = input_arr;     
 
         //Try to create thread   
-        int ec = pthread_create(&threads[i], NULL, thread_routine, t_input)
+        int ec = pthread_create(&threads[i], NULL, thread_routine, t_input[i]);
 
         // Check if creating threads failed (pthread_create returns null if successfull, errorcode if not)
         if (ec){
-            perror("Creating thread %d failed! Error: %d \n", i, ec);
+            char buffer[50];
+            sprintf(buffer,"Creating thread %d failed! Error: %d \n", i, ec);
+            perror(buffer);
             return -1;
         }
-    }
-
+        }
+    // return value
+    long sum_from_threads;
+    
     // Wait for all threads to finish
     for (int i = 0; i < local_tnum; i++){
         // Check if the join failed
+
         if (pthread_join(threads[i], NULL)){
-            perror("Joining of thread %d failed!\n", i);
+            char buffer[50];
+            sprintf(buffer, "Joining of thread %d failed!\n", i);
+            perror(buffer);
             return -1;
         }
+        // sum up results
+            // this might not be needed, i didn't think of using a single shared result pointer in the input
+        sum_from_threads += t_input[i]->res;
+        
     }
+   
+    return sum_from_threads;
 }
 
 
 int main(){
-    int test_arr[15];
-    int** tap = &test_arr;
+    long test_arr[16];
+    //int** tap = &test_arr;
 
-    for(int i = 0; i<15; i++){
-        *tap[i] = i*12 - 5; 
+    for(int i = 0; i<16; i++){
+        test_arr[i] = (long) 1; 
     }
+    int t_num;    
+    printf("Input the number of threads you want to use: \n");
+    scanf("%d", &t_num);
 
-    printf("Input the number of threads you want to use: \n")
-    int t_num = scanf();
-
-    long result = threaded_sum(t_num, testarr, 15)
-    if (!result){
+    long result = threaded_sum(t_num, test_arr, 16);
     printf("The sum of the given array was: %ld \n", result);
     return 0;
-    } else {
-        printf("Threaded sum failed, see prior error message. Returning -1.\n")
-    }
+
 
 }
