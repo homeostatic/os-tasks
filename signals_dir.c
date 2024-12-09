@@ -15,12 +15,17 @@ volatile int KEEP_GOING = 1;
  SIGTERM can be send using kill -- kill 15 <pid>
  \param signal - the signal id of our signal that should be handled
  */
-void handler(int signal){
-    switch (signal)
+void handler(int signal, siginfo_t *siginfo, void *ignore){
+    switch (signal){
     case SIGINT:
     //"exit gracefully"
+    //printf("caught SIGINT");
+    KEEP_GOING = 0;
+    break;
     case SIGTERM:
+    //printf("caught SIGTERM");
     exit(0); 
+    }
   // Implement me!
 }
 
@@ -33,9 +38,11 @@ System calls should be automatically restarted!
 void signal_handling() {
   // Implement me!
   //TODO: make struct(s) w. malloc?
-  //
-  sigaction(SIGINT, &structInt, NULL);
-  sigaction(SIGTERM, &structTerm, NULL); 
+  struct sigaction act;
+  act.sa_flags = SA_SIGINFO;
+  act.sa_sigaction = handler;
+  sigaction(SIGINT, &act, NULL);
+  sigaction(SIGTERM, &act, NULL); 
 }
 
 // Prints the names of all files in a directory. DO NOT CHANGE this function or its signature!
