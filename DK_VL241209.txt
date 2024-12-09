@@ -1,0 +1,117 @@
+-- Logik Programmierung
+
+
+--Family relationships
+
+data Person = Christine | Heinz | Maria | Fritz | Herbert | Angelika | Andy
+    deriving (Eq,Show)
+
+ehemann :: Person -> Person
+ehemann Christine = Heinz
+ehemann Maria = Fritz
+ehemann Angelika = Herbert
+
+mutter :: Person -> Person
+mutter Angelika = Christine
+mutter Andy = Angelika
+
+vater :: Person -> Person
+vater = ehemann . mutter
+-- vater kind = ehemann (mutter kind)
+
+grossvater :: Person -> Person -> Bool
+grossvater e g | g == vater (vater e)   = True
+               | g == vater (mutter e)  = True
+               | otherwise              = False
+
+-------------------------------------------------------------
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Prolog ('72, programming in Logic)
+
+%definineren Prädikaten & Relationen
+%leiten schlussfolgerung ab
+%logische / freien variablen in initiallen anfragen
+
+%Prolog programm; Menge von Fakten und Regeln. Prädikaten & Relationen
+    %Aussagen über Objekten
+
+%Standardpräfixschreibweise
+    %name mit kleinbuchstabe, keine leerzeichnen.
+name(objekt_1,...,ojeckt_n)
+
+%Fakten: Aussagen die als Richtig angenommen werden
+
+ehemann(christine, heinz).
+ehemann(maria, fritz).
+ehemann(angelika, herbert).
+
+mutter(angelika, christine).
+mutter(teddy, christine)
+mutter(andy, angelika).
+
+%Regeln (schlussfolgerung):
+    % WENN Aussage_1 Richtig, UND Aussage_2 Richtig, DANN ist auch Aussage_3 Richtig
+
+Aussage_3 :- Aussage_1, Aussage_2.
+        % :- ist "falls"
+        % ,  ist UND
+
+
+vater(Kind, Mensch) :- mutter(Kind, Mutter), ehemann(Mutter, Mensch).
+    % variablen mit großbuchstaben
+
+grossvater(Enkel, Pa) :- vater(Enkel, Dad), vater(Dad, Pa)
+grossvater(Enkel, Pa) :- mutter(Enkel, Ma), vater(Ma, Pa)
+
+    % alle regeln werden ausprobiert
+
+% Anfragen: Aussagen, deren Korrektheit bzgl. Fakten & Regeln geprüft wird.
+        % ?- steht für Anfrage
+
+>>swi Prolog
+% load datei
+?- [filename].
+...
+?- vater(andy, herbert)
+true
+?- vater(andy, maria)
+false
+
+% variablen können beim aufruf angegeben werden
+
+?- vater(Kind, heinz).
+Kind = teddy;
+Kind = angelika;
+Kind = false
+
+% relationen sind richtungslos
+
+% Begriffe:
+- Atome         -   elementare Objekte
+- Klausen:
+    - Fakten    -   gultige Aussagen
+    - Regeln    -   WENN/DANN Aussagen
+- Anfragen      -   ist Aussage richtig?
+- variablen     -   für welche Werte gilt die Aussage
+
+
+% Trokener Syntax
+% Kostante = Atome oder Zahlen
+% Structuren = Mehrere Objekte mit structurenamen
+    %beliebige verschactelung
+datum(9,12,24)    \neq zeit(9,12,24)
+
+% Listen
+% leer oder nicht leer
+[]
+% oder
+.(E,L) == [E|L]
+% liste a->b->c->
+.(a,.(b,.(c,[])))
+%kurzschreibweise
+[a,b,c] == [a,b | [c]].
+% Texte: Listen von ASCII Werte
+"Prolog" = [80,114,107...]
+
+% Operatorschreibweise
++(1,*(1,3)) = 1+2*3

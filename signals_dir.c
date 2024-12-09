@@ -16,6 +16,11 @@ volatile int KEEP_GOING = 1;
  \param signal - the signal id of our signal that should be handled
  */
 void handler(int signal){
+    switch (signal)
+    case SIGINT:
+    //"exit gracefully"
+    case SIGTERM:
+    exit(0); 
   // Implement me!
 }
 
@@ -27,6 +32,10 @@ System calls should be automatically restarted!
 */
 void signal_handling() {
   // Implement me!
+  //TODO: make struct(s) w. malloc?
+  //
+  sigaction(SIGINT, &structInt, NULL);
+  sigaction(SIGTERM, &structTerm, NULL); 
 }
 
 // Prints the names of all files in a directory. DO NOT CHANGE this function or its signature!
