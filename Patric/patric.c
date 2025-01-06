@@ -30,9 +30,13 @@ struct state {
   int boundary, interior;
 
   int active, finished;
-} state;
+} state = {0,0,0,0};
 
+// semaphores for keeping track of avalible thread capacity, mutual exclusivity of the State struct, and an update ping for the printer
 sem_t thread_counter, mutex, update;
+
+// toggle for the while loop of the printer thread
+bool print_run = true;
 
 
 /**
@@ -75,6 +79,7 @@ static void *worker(void *tri){
 
   free(tri);
 
+  sem_post(&update);        //debug? 
   sem_post(&thread_counter);
 
   return NULL;
@@ -86,12 +91,12 @@ static void *worker(void *tri){
 static void * printer(){
   //printf("printer started\n");
   
-  while(true){
-    //logic to only print when an worker thread finishes
-    //printf("\r");
+  
+  while(print_run){//uses  global bool, will only be set to false once main funtion has confirmed that there are no active threads.
+    //logic to only print when the callback function has updates the results
     sem_wait(&update);
 
-    struct state* snap = malloc(sizeof(struct state));
+    struct state* snap = malloc(sizeof(struct state)); //malloc might be overkill here
 
     sem_wait(&mutex);
     //grab global variables
@@ -100,11 +105,16 @@ static void * printer(){
     snap->active   = state.active;
     snap->finished = state.finished;
     sem_post(&mutex);
-    // something with "\r"? to make it update?
-    printf("Found %d boundary and %d interior points, %d active threads, %d finished threads\n",snap->boundary,snap->interior,snap->active,snap->finished);
+    // with "\r"? to make it "update" rather than print multiple lines
+    printf("\rFound %d boundary and %d interior points, %d active threads, %d finished threads",
+      snap->boundary,
+      snap->interior,
+      snap->active,
+      snap->finished);
+    fflush(stdout);
     free(snap);
   }
-  return NULL; //thread will be killed when main() exits
+  return NULL; //thread will be killed when main() finishes
 };
 
 
@@ -125,7 +135,6 @@ int main(int argc, char * argv[]) {
   sem_init(&thread_counter, 0, max_threads); // semaphore for keeping threads under specified limit
   sem_init(&update, 0, 0); // semaphore for signaling the printer thread to output starts locked
   sem_init(&mutex, 0, 1); // ensure mutual exclusivity of access to global state struct, initially free
-  struct state state = {0,0,0,0};
 
   bool run = true;
 
@@ -148,7 +157,7 @@ int main(int argc, char * argv[]) {
           &tri->point[2].x, &tri->point[2].y ) == 6)
       {
       while (getchar() != '\n'); //clear buffer
-      //printf("triangle parsed!\n"); 
+      
       //check threadcount is not exceeded
       sem_wait(&thread_counter);
       //create & detach worker
@@ -157,17 +166,38 @@ int main(int argc, char * argv[]) {
 
       } else {
             if(feof(stdin)){
-              printf("EOF detected\n");
+              printf("\nEOF detected\n");
               run = false;
             } else {
-            printf("invalid input! format: (<x_1>,<y_1>),(<x_2>,<y_2>),(<x_3>,<y_3>)\n");
+            perror("invalid input! format: (<x_1>,<y_1>),(<x_2>,<y_2>),(<x_3>,<y_3>)\n");
             while (getchar() != '\n'); //clear buffer
             }
       }
   }
-  
+  printf("\nclosing:\n");
+
+  //check number of active workers
+  sem_wait(&mutex);
+  int active = state.active;
+  sem_post(&mutex);
+
+  while(active != 0){
+    printf("\r                                                                                               waiting on %d threads...",active);
+    fflush(stdout);
+    usleep(100);
+    sem_wait(&mutex);
+    active = state.active;
+    sem_post(&mutex);
+  };
+
+  printf("\nall threads done.\n");
+
+  //exit printer thread by toggling it'S loop
+  print_run = false;
+  sem_post(&update);
+
   sem_destroy(&thread_counter);
   sem_destroy(&mutex);
   sem_destroy(&update);
-  return EXIT_SUCCESS;
+  return 1;
 }
