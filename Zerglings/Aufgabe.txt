@@ -1,0 +1,19 @@
+The swarm has hired you to solve one of its problems: A pack of baby Zerglings eats stew from a large pot that holds M servings of stewed Terrans. If a baby Zergling wants to eat, it eats one serving from the pot - if it is available. If the pot is empty, it wakes the cook Zergling who refills the pot with new stewed Terrans.
+
+We define that there are 10
+baby Zerglings of which each wants to eat 13 portions (baby Zerglings are very hungry). Our pot has a capacity of M=4.
+This means your main function has to spawn 10
+
+baby Zergling threads, one cook thread.
+Your programme should join all of them in the end, the cook is allowed to stop cooking after all baby Zerglings are well fed.
+Use keep_cooking for controlling the cook.
+
+Your programme has to follow following semantical requirements:
+- Baby Zerglings must not call has_eaten when they cannot get a portion from the pot because it is empty!
+- The cook only refills the pot if its empty (they are a lazy cook).
+
+Please use the following handout as a template for your programme:
+dining_zerglings.c
+
+Hint:
+Take a look on the global variables of the presence tasks of exercise 10 (but not for the whole synchronisation please)
