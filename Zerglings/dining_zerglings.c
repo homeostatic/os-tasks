@@ -19,12 +19,13 @@ static volatile bool keep_cooking;
 
 // access semaphore for the cooking pot and singal for when it is empty
 sem_t pot_sem;
-sem_t pot_empty; 
+sem_t pot_empty;
+sem_t pot_full; 
 
 // TODO: Model the pot and synchronise the behaviour somehow!
 // Hint: Take a look on the global variables of the last exercise sheet's task (but not for the whole synchronisation please)
 
-int pot = 0;
+volatile int pot = 0;
 
 /**
  * @brief Helper that returns the thread id of the calling thread
@@ -32,7 +33,7 @@ int pot = 0;
  * @return long the thread id as a long
  */
 long tid_help() {
-    return SYSCALL(SYS_gettid);
+    return syscall(SYS_gettid);
 }
 
 /**
@@ -65,13 +66,16 @@ void* baby_zergling(void* in) {
         sem_wait(&pot_sem);
         /////////////critical///////////////
         if(pot == 0){
+            printf("pot empty\n");
             // call the cook
             sem_post(&pot_empty);
+
             // wait for the refill
-            sem_wait(&pot_empty);
+            sem_wait(&pot_full);
         }
         pot--;
         has_eaten(eaten);
+        printf("pot = %d \n",pot);
         ///////////////////////////////////
         sem_post(&pot_sem);
     }
@@ -101,12 +105,14 @@ void* cook_zergling(void* in) {
     while (keep_cooking) {
         sem_wait(&pot_empty);
         //////////////critical//////////////////
-        for(int m; m<M;m++){
+        //for(int m=0; m<M;m++){
+        if(keep_cooking){
             put_serving_in_the_pot();
-            pot++;
+            pot+=4;
         }
         ///////////////////////////////////////
-        sem_post(&pot_empty);
+        //sem_post(&pot_empty);
+        sem_post(&pot_full);
     }
     printf("Cook finishes cooking and an ultralisk eats the whole remaining pot!\n");
     pot = 0;
@@ -122,6 +128,8 @@ void init_sems() {
     sem_init(&pot_sem,0,1); //initally free
     //signal for the cook to refill
     sem_init(&pot_empty,0,0); //initally locked
+    //signal the cook has cooked
+    sem_init(&pot_full,0,0);//initally locked
 }
 
 /**
@@ -130,6 +138,7 @@ void init_sems() {
 void destroy_sems() {
     sem_destroy(&pot_sem);
     sem_destroy(&pot_empty);
+    sem_destroy(&pot_full);
 }
 
 // TODO: Main Function that spawns 10 zergling processes, one cook process and joins all of them in the end. Use keep_cooking for controlling the cook
@@ -137,7 +146,7 @@ void destroy_sems() {
 int main() {
 
     init_sems();
-
+    keep_cooking = true;
     //create cook zergling
     pthread_t cook_zergling_t;
     int err = pthread_create(&cook_zergling_t,NULL,cook_zergling,NULL);
@@ -165,7 +174,8 @@ int main() {
     }
     //signal cook to stop cooking
     keep_cooking = false;
-    if(pthread_joing(cook_zergling_t,NULL)){
+    sem_post(&pot_empty);
+    if(pthread_join(cook_zergling_t,NULL)){
         perror("joining cook zergling thread failed");
         return -1;
     }
