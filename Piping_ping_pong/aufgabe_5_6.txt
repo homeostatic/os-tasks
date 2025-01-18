@@ -1,0 +1,25 @@
+
+A reminder about (unnamed) pipes
+
+As the lecture and exercise have introduced to you: A pipe is a unidirectional (i.e. one-way) communication channel: We have a write end and a read end. The read process at the read end blocks until the write process sends a message. When the pipe is full, the write process blocks until the read process has read something from the pipe. In other words: A pipe can be used to synchronise communication between processes!
+What your program should do
+You are now tasked with synchronising a simple communication procedure between two processes, more precisely between a parent and a child process.
+We provide you with a programme that already contains a considerable amount of the necessary logic. A parent process spawns a child process and both want to communicate with each other using two pipes. (The pipe part is missing, of course).
+
+Your programme must fulfil following rules:
+
+    The parent sends a "Ping" message to the child.
+    The child sends an acknowledgement message (a "Pong" message) to the parent when it receives a "Ping", otherwise, the child waits and does nothing.
+
+If the parent receives a "Pong", it sends the next "Ping" to the child, otherwise, the parent waits and does nothing.
+Before forking, we create two pipes. Parent sends the string "Ping" through the top pipe when tell_child is called, child sends pong through the bottom pipe when tell_parent is called.
+
+Please use the following template for your programme:
+pipe_comm.c
+
+Hints:
+
+    You should close the end of the pipes that your process is not using
+    You should assure that you close the correct end, otherwise you might read nothing or your write might not work.
+    If your pipe creation runs into an error use perror and exit with a failure
+

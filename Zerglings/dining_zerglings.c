@@ -22,9 +22,7 @@ sem_t pot_sem;
 sem_t pot_empty;
 sem_t pot_full; 
 
-// TODO: Model the pot and synchronise the behaviour somehow!
-// Hint: Take a look on the global variables of the last exercise sheet's task (but not for the whole synchronisation please)
-
+// counter for number of portions currently in the pot
 volatile int pot = 0;
 
 /**
@@ -60,7 +58,6 @@ void try_to_get_portion() {
  * @return void*
  */
 void* baby_zergling(void* in) {
-    // TODO: Synchronisation and pot access 
     for (int eaten = 0; eaten < 13; eaten++) {
         try_to_get_portion();
         sem_wait(&pot_sem);
@@ -99,19 +96,18 @@ void put_serving_in_the_pot() {
  * @return void*
  */
 void* cook_zergling(void* in) {
-    // TODO: Synchronisation and pot access
-    // the cook is blocked until a baby zergling calls sempost on the pot_empty semaphore,
+    // the cook is blocked until a baby zergling calls sem_post on the pot_empty semaphore,
     // this also means the cook has access to the pot within the critical region of the calling baby
     while (keep_cooking) {
         sem_wait(&pot_empty);
         //////////////critical//////////////////
-        //for(int m=0; m<M;m++){
-        if(keep_cooking){
+        //for(int m=0; m<M;m++){    //lol this did not need to be a loop
+        if(keep_cooking){           // this if stops the cook from cooking an extra meal after the babies have all eaten
             put_serving_in_the_pot();
             pot+=4;
         }
         ///////////////////////////////////////
-        //sem_post(&pot_empty);
+        // signal waiting baby that the pot if full
         sem_post(&pot_full);
     }
     printf("Cook finishes cooking and an ultralisk eats the whole remaining pot!\n");
@@ -141,12 +137,14 @@ void destroy_sems() {
     sem_destroy(&pot_full);
 }
 
-// TODO: Main Function that spawns 10 zergling processes, one cook process and joins all of them in the end. Use keep_cooking for controlling the cook
+//Main Function that spawns 10 zergling processes, one cook process and joins all of them in the end. keep_cooking for controlling the cook
 
 int main() {
 
     init_sems();
+
     keep_cooking = true;
+
     //create cook zergling
     pthread_t cook_zergling_t;
     int err = pthread_create(&cook_zergling_t,NULL,cook_zergling,NULL);
@@ -175,12 +173,13 @@ int main() {
     //signal cook to stop cooking
     keep_cooking = false;
     sem_post(&pot_empty);
+
     if(pthread_join(cook_zergling_t,NULL)){
         perror("joining cook zergling thread failed");
         return -1;
     }
 
-
+    //clean up
     destroy_sems();
     return 0;
 }
